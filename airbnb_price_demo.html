@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Noel Love ❤️</title>
+
+<style>
+    html, body { margin: 0; background: #000; overflow: hidden; transition: background 2s ease; }
+    canvas { display: block; position: absolute; top: 0; left: 0; }
+
+    /* CHỮ RÕ NÉT, ĐẬP NHẸ NHÀNG */
+    #loveText {
+        position: absolute; 
+        top: 48%; 
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 42px; 
+        font-weight: 900; 
+        color: white;
+        text-align: center;
+        width: 100%;
+        pointer-events: none;
+        /* Đổ bóng mạnh để chữ luôn nổi bật */
+        text-shadow: 0 0 10px #fff, 0 0 20px #ffd700, 0 0 35px #ff3131;
+        display: none; 
+        z-index: 100; 
+        font-family: 'Arial', sans-serif;
+        
+        /* Chỉ đập nhẹ scale, giữ nguyên độ rõ nét */
+        animation: steadyGentlePulse 2s ease-in-out infinite; 
+    }
+
+    @keyframes steadyGentlePulse {
+        0%, 100% { transform: translate(-50%, -50%) scale(1); }
+        50% { transform: translate(-50%, -50%) scale(1.06); } 
+    }
+
+    .snow { position: absolute; top: -20px; color: white; animation: fall linear infinite; pointer-events: none; z-index: 50; }
+    @keyframes fall { to { transform: translateY(100vh); } }
+
+    #gift-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; z-index: 20; }
+    .gift { position: absolute; width: 80px; animation: bounce 2s ease-in-out infinite alternate; filter: drop-shadow(0 0 10px rgba(255,255,255,0.8)); }
+    @keyframes bounce { from { transform: translateY(0) rotate(-10deg); } to { transform: translateY(-40px) rotate(10deg); } }
+
+    #special-gift { position: absolute; top: 50%; left: 50%; width: 100px; transform: translate(-50%, -50%) scale(0); display: none; z-index: 200; transition: all 1.2s cubic-bezier(0.5, 0, 0.5, 1.2); }
+    .zoom-in { transform: translate(-50%, -50%) scale(20) !important; opacity: 0; }
+</style>
+</head>
+
+<body>
+<canvas id="c"></canvas>
+<div id="loveText">MERRY CHRISTMAS<br>BABE ❤️</div>
+<div id="gift-container"></div>
+<img id="special-gift" src="https://img.icons8.com/color/144/christmas-gift.png">
+
+<script>
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+canvas.width = innerWidth; canvas.height = innerHeight;
+const cx = canvas.width/2; const cy = canvas.height/2;
+
+let scene = "tree";
+let t = 0;
+
+function startSnow(){
+    for(let i=0;i<120;i++){
+        let s=document.createElement("div");
+        s.className="snow"; s.innerHTML="❄";
+        s.style.left=Math.random()*innerWidth+"px";
+        s.style.fontSize=8+Math.random()*12+"px";
+        s.style.opacity=Math.random();
+        s.style.animationDuration=3+Math.random()*5+"s";
+        document.body.appendChild(s);
+    }
+}
+
+/* ================= 🎄 TREE ================= */
+const TREE_H = 500;
+const TREE_R = 220;
+let tree = [];
+class TreeParticle {
+    constructor(y){
+        this.y=y; this.a=Math.random()*Math.PI*2;
+        this.s=Math.random()*0.01+0.005;
+        this.c=Math.random()>0.7 ? "#ffd700" : "#ff3131";
+    }
+    u(){ this.a+=this.s }
+    d(){
+        const ratio=1-(this.y+TREE_H/2)/TREE_H;
+        const r=TREE_R*ratio;
+        const x3=Math.cos(this.a)*r;
+        const z3=Math.sin(this.a)*r;
+        const sc=400/(400+z3);
+        ctx.beginPath();
+        ctx.arc(cx+x3*sc, cy-this.y*sc, 2.5*sc,0,Math.PI*2);
+        ctx.fillStyle=this.c; ctx.shadowBlur=15; ctx.shadowColor=this.c; ctx.fill();
+    }
+}
+function createTree(){
+    for(let i=0;i<1400;i++) tree.push(new TreeParticle(Math.random()*TREE_H-TREE_H/2));
+}
+
+function drawStar(){
+    ctx.save(); ctx.translate(cx, cy-TREE_H/2-40); ctx.fillStyle="#fff700";
+    ctx.shadowBlur=40; ctx.shadowColor="gold"; ctx.beginPath();
+    for(let i=0;i<5;i++){
+        ctx.lineTo(Math.cos((18+i*72)*Math.PI/180)*25, -Math.sin((18+i*72)*Math.PI/180)*25);
+        ctx.lineTo(Math.cos((54+i*72)*Math.PI/180)*10, -Math.sin((54+i*72)*Math.PI/180)*10);
+    }
+    ctx.fill(); ctx.restore();
+}
+
+/* ================= 🎁 GIFTS ================= */
+function showGifts() {
+    const container = document.getElementById("gift-container");
+    container.style.display = "block";
+    const icons = ["https://img.icons8.com/color/144/christmas-gift.png", "https://img.icons8.com/color/144/gift--v1.png"];
+    for(let i=0; i<15; i++) {
+        let img = document.createElement("img");
+        img.src = icons[i % 2]; img.className = "gift";
+        img.style.left = Math.random() * 80 + 10 + "%";
+        img.style.top = Math.random() * 60 + 10 + "%";
+        img.style.animationDelay = Math.random() * 2 + "s";
+        container.appendChild(img);
+    }
+}
+
+/* ================= ❤️ HEART BLING BLING ================= */
+let heart=[];
+function createHeart(){
+    for(let i=0;i<2800;i++){
+        let a=Math.random()*Math.PI*2;
+        let r=Math.random();
+        let x=16*Math.pow(Math.sin(a),3)*r;
+        let y=(13*Math.cos(a)-5*Math.cos(2*a)-2*Math.cos(3*a)-Math.cos(4*a))*r;
+        heart.push({
+            origX: x * 18,
+            origY: -y * 18,
+            s: Math.random()*2+1,
+            c: Math.random() > 0.6 ? "#ffd700" : (Math.random() > 0.3 ? "#ff3131" : "#ffffff")
+        });
+    }
+}
+
+function drawHeart(){
+    let beat = 1 + 0.18 * Math.abs(Math.sin(t * 3)); 
+    
+    heart.forEach(p=>{
+        ctx.beginPath();
+        ctx.arc(cx + p.origX * beat, cy + p.origY * beat, p.s, 0, Math.PI*2);
+        ctx.fillStyle=p.c;
+        ctx.shadowBlur=15;
+        ctx.shadowColor=p.c;
+        ctx.fill();
+    });
+}
+
+function loop(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    t+=0.04;
+    if(scene==="tree"){ tree.forEach(p=>{p.u();p.d();}); drawStar(); }
+    if(scene==="heart") drawHeart();
+    requestAnimationFrame(loop);
+}
+
+/* ================= SEQUENCE ================= */
+document.body.style.background = "radial-gradient(circle, #0d1b2a 0%, #000 100%)";
+startSnow(); createTree(); loop();
+
+setTimeout(()=>{
+    document.body.style.background = "radial-gradient(circle, #1a1a1a 0%, #000 100%)";
+    scene = "none"; showGifts();
+}, 5000);
+
+setTimeout(() => {
+    document.getElementById("gift-container").style.display = "none";
+    const special = document.getElementById("special-gift");
+    special.style.display = "block";
+    setTimeout(() => { special.classList.add("zoom-in"); }, 50);
+}, 9000);
+
+setTimeout(()=>{
+    document.body.style.background = "radial-gradient(circle, #2a0d0d 0%, #000 100%)";
+    document.getElementById("special-gift").style.display = "none";
+    scene="heart"; createHeart();
+    document.getElementById("loveText").style.display="block";
+}, 10500);
+
+window.onresize = () => { canvas.width=innerWidth; canvas.height=innerHeight; };
+</script>
+</body>
+</html>
